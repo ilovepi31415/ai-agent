@@ -1,5 +1,6 @@
 import os
 import subprocess
+from google.genai import types
 
 def run_python_file(working_directory, file_path, args=[]):
     joined_path = os.path.join(working_directory, file_path)
@@ -22,3 +23,23 @@ def run_python_file(working_directory, file_path, args=[]):
     if process.returncode != 0:
         message += f"\nProcess exited with code {process.returncode}"
     return message
+
+schema_run_python_file = types.FunctionDeclaration(
+    name="run_python_file",
+    description="Runs a python file and returns the output, contrained to the working directory",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="The file path to be run, relative to the working directory"
+            ),
+            "args": types.Schema(
+                type=types.Type.ARRAY,
+                items=types.Schema(type=types.Type.STRING),
+                default=[],
+                description="Optional. A list of the arguments, if any are needed, for running the python file"
+            )
+        }
+    )
+)
