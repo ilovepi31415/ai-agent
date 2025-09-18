@@ -1,4 +1,5 @@
 import os
+from google.genai import types
 
 CHARACTER_LIMIT = 10000
 
