@@ -42,6 +42,10 @@ class TestCalculator(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.calculator.evaluate("+ 3")
 
+    def test_exponentiation(self):
+        result = self.calculator.evaluate("2 ^ 3")
+        self.assertEqual(result, 8)
+
 
 if __name__ == "__main__":
     unittest.main()

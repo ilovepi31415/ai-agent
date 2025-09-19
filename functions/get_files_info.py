@@ -3,12 +3,16 @@ from google.genai import types
 
 def get_files_info(working_directory, directory="."):
     try:
+        # Gets true path of desired directory
         joined_dir = os.path.join(working_directory, directory)
+        
+        # Validation: makes sure directory is within contraints and exists
         if not os.path.abspath(joined_dir).startswith(os.path.abspath(working_directory)):
             return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
-        print(joined_dir)
         if not os.path.isdir(joined_dir):
             return f'Error: "{directory}" is not a directory'
+        
+        # Gathers list of files in directory as a string and returns it
         file_string = ''
         for path in os.listdir(joined_dir):
             true_path = os.path.join(joined_dir, path)

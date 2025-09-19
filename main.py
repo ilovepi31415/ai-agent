@@ -62,6 +62,7 @@ iterations = 0
 while iterations < 20:
     try:
         done = False
+        # Gets the response from Gemini
         response = client.models.generate_content(
             model='gemini-2.0-flash-001',
             contents=messages,
@@ -72,9 +73,11 @@ while iterations < 20:
 
         )
 
+        # Adds each response to the context of the model
         for candidate in response.candidates:
             messages.append(types.Content(role="model", parts=candidate.content.parts))
 
+        # Calls functions if asked for, and adds the return value to the context
         if response.function_calls != None:
             for call in response.function_calls:
                 print(f"\033[93m- Calling function: {call.name}({call.args})\033[0m]")
@@ -83,6 +86,7 @@ while iterations < 20:
                     print(f"-> {call_return.parts[0].function_response.response}")
                 messages.append(call_return)
 
+        # Checks for "I'M DONE" exit phrase to exit the loop
         for candidate in response.candidates:
             if candidate.content.parts:
                 for part in candidate.content.parts:

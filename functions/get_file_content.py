@@ -5,8 +5,10 @@ CHARACTER_LIMIT = 10000
 
 def get_file_content(working_directory, file_path):
     try:
+        # Finds the true path to the desired file
         joined_path = os.path.join(working_directory, file_path)
-        print(joined_path)
+
+        # Validation: makes sure the file is within the allowed directory and exists
         if not os.path.abspath(joined_path).startswith(os.path.abspath(working_directory)):
             return f'Error: Cannot read "{file_path}" as it is outside the permitted working directory'
         if not os.path.isfile(joined_path):
