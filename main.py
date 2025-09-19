@@ -24,6 +24,19 @@ When a user asks a question or makes a request, make a function call plan. You c
 - Write or overwrite files
 
 All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
+Your actions take place in a feedback loop of calling function and receiving return values from those functions. You are allowed up to 20 iterations.
+
+⚠️ Do NOT provide a text response unless your task is fully completed.
+Continue using function calls to gather information or perform actions.
+
+Only return a final text response when:
+- All necessary actions are complete
+- You have all the required information
+- You are ready to end the task
+
+You are allowed up to 20 iterations.
+
+To leave the feedback loop once all necessary actions are complete, use "I'M DONE" at the beginning of your resopnse.
 """
 
 if len(sys.argv) < 2:
@@ -45,26 +58,45 @@ available_functions = types.Tool(
     ]
 )
 
-response = client.models.generate_content(
-    model='gemini-2.0-flash-001',
-    contents=messages,
-    config=types.GenerateContentConfig(
-        system_instruction=system_prompt,
-        tools=[available_functions]
-    )
+iterations = 0
+while iterations < 20:
+    try:
+        done = False
+        response = client.models.generate_content(
+            model='gemini-2.0-flash-001',
+            contents=messages,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                tools=[available_functions]
+            )
 
-)
+        )
 
-if response.function_calls != None:
-    for call in response.function_calls:
-        print(f"Calling function: {call.name}({call.args})")
-        call_return = call_function(call, verbose)
-        if verbose:
-            print(f"-> {call_return.parts[0].function_response.response}")
+        for candidate in response.candidates:
+            messages.append(types.Content(role="model", parts=candidate.content.parts))
 
-else:
-    print(response.text)
-if verbose:
-    print("User prompt:", prompt)
-    print("Prompt tokens:", response.usage_metadata.prompt_token_count)
-    print("Response tokens:", response.usage_metadata.candidates_token_count)
+        if response.function_calls != None:
+            for call in response.function_calls:
+                print(f"- Calling function: {call.name}({call.args})")
+                call_return = call_function(call, verbose)
+                if verbose:
+                    print(f"-> {call_return.parts[0].function_response.response}")
+                messages.append(call_return)
+
+        for candidate in response.candidates:
+            if candidate.content.parts:
+                for part in candidate.content.parts:
+                    if isinstance(part, types.Part) and part.text and "I'M DONE" in part.text:
+                        done = True
+                        print("response:", part.text)
+                        break
+        if done:
+            if verbose:
+                print("User prompt:", prompt)
+                print("Prompt tokens:", response.usage_metadata.prompt_token_count)
+                print("Response tokens:", response.usage_metadata.candidates_token_count)
+            break
+        iterations += 1
+    except Exception as e:
+        print(f"Error: {e}")
+        break
