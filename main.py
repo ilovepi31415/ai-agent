@@ -77,7 +77,7 @@ while iterations < 20:
 
         if response.function_calls != None:
             for call in response.function_calls:
-                print(f"- Calling function: {call.name}({call.args})")
+                print(f"\033[93m- Calling function: {call.name}({call.args})\033[0m]")
                 call_return = call_function(call, verbose)
                 if verbose:
                     print(f"-> {call_return.parts[0].function_response.response}")
@@ -88,7 +88,7 @@ while iterations < 20:
                 for part in candidate.content.parts:
                     if isinstance(part, types.Part) and part.text and "I'M DONE" in part.text:
                         done = True
-                        print("response:", part.text)
+                        print("\033[92response:\033[0m", part.text)
                         break
         if done:
             if verbose:
