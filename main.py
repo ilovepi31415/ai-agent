@@ -7,6 +7,7 @@ from functions.get_files_info import schema_get_files_info
 from functions.get_file_content import schema_get_file_content
 from functions.run_python_file import schema_run_python_file
 from functions.write_file import schema_write_file
+from functions.call_function import call_function
 
 load_dotenv()
 key = os.getenv("GEMINI_API_KEY")
@@ -29,6 +30,8 @@ if len(sys.argv) < 2:
     print("ERROR: no prompt provided")
     sys.exit(1)
 prompt = sys.argv[1]
+
+verbose = len(sys.argv) > 2 and sys.argv[2] == "--verbose"
 
 messages = [
     types.Content(role="user", parts=[types.Part(text=prompt)])
@@ -55,9 +58,13 @@ response = client.models.generate_content(
 if response.function_calls != None:
     for call in response.function_calls:
         print(f"Calling function: {call.name}({call.args})")
+        call_return = call_function(call, verbose)
+        if verbose:
+            print(f"-> {call_return.parts[0].function_response.response}")
+
 else:
     print(response.text)
-if len(sys.argv) > 2 and sys.argv[2] == "--verbose":
+if verbose:
     print("User prompt:", prompt)
     print("Prompt tokens:", response.usage_metadata.prompt_token_count)
     print("Response tokens:", response.usage_metadata.candidates_token_count)
